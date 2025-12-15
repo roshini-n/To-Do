@@ -60,7 +60,19 @@ function Activities() {
       }
       
       console.log('Submit successful, refreshing activities...');
-      await fetchDailyActivities();
+      // Fetch activities for the activity_date, not just the currently selected date
+      console.log('Fetching activities for date:', formData.activity_date);
+      const response = await activitiesAPI.getDailyActivities(formData.activity_date);
+      console.log('Fetch response:', response);
+      if (response.success) {
+        console.log('Activities fetched:', response.data);
+        setActivities(response.data);
+        // Also update selectedDate if it's different
+        if (formData.activity_date !== selectedDate) {
+          console.log('Updating selected date to:', formData.activity_date);
+          setSelectedDate(formData.activity_date);
+        }
+      }
       resetForm();
       setShowForm(false);
     } catch (err) {
@@ -181,6 +193,16 @@ function Activities() {
                   <option value="Other">Other</option>
                 </select>
               </div>
+              <div className="form-group">
+                <label>Description</label>
+                <textarea
+                  name="description"
+                  value={formData.description}
+                  onChange={handleInputChange}
+                  rows="3"
+                  placeholder="Add any notes about this activity..."
+                />
+              </div>
             </div>
 
             <div className="form-row">
@@ -203,17 +225,6 @@ function Activities() {
                   onChange={handleInputChange}
                 />
               </div>
-            </div>
-
-            <div className="form-group">
-              <label>Description</label>
-              <textarea
-                name="description"
-                value={formData.description}
-                onChange={handleInputChange}
-                rows="3"
-                placeholder="Add any notes about this activity..."
-              />
             </div>
 
             <div className="form-actions">
@@ -251,7 +262,7 @@ function Activities() {
                   <p className="activity-duration">Duration: {Math.floor(activity.duration_minutes / 60)}h {activity.duration_minutes % 60}m</p>
                 )}
                 <div className="activity-footer">
-                  <small className="activity-time">{new Date(activity.activity_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</small>
+                  <small className="activity-time">{new Date(activity.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</small>
                   <button
                     className="btn-delete-activity"
                     onClick={() => handleDeleteActivity(activity.id)}
