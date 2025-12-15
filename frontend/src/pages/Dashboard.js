@@ -104,7 +104,7 @@ function Dashboard() {
             <div className="metrics-grid">
               {/* Primary KPI */}
               <div className="metric-card primary">
-                <div className="metric-icon">📊</div>
+                <div className="metric-icon"></div>
                 <div className="metric-content">
                   <div className="metric-value">{stats?.totalApplications || 0}</div>
                   <div className="metric-label">Total Applications</div>
@@ -116,7 +116,7 @@ function Dashboard() {
 
               {/* Success Stats */}
               <div className="metric-card success">
-                <div className="metric-icon">🎯</div>
+                <div className="metric-icon"></div>
                 <div className="metric-content">
                   <div className="metric-value">{stats?.offers || 0}</div>
                   <div className="metric-label">Offers</div>
@@ -128,7 +128,7 @@ function Dashboard() {
 
               {/* Interview Stats */}
               <div className="metric-card info">
-                <div className="metric-icon">🤝</div>
+                <div className="metric-icon"></div>
                 <div className="metric-content">
                   <div className="metric-value">{stats?.interviews || 0}</div>
                   <div className="metric-label">Interview Calls</div>
@@ -140,7 +140,7 @@ function Dashboard() {
 
               {/* Status Overview */}
               <div className="metric-card warning">
-                <div className="metric-icon">⏳</div>
+                <div className="metric-icon"></div>
                 <div className="metric-content">
                   <div className="metric-value">{stats?.pending || 0}</div>
                   <div className="metric-label">Pending Response</div>
@@ -152,7 +152,7 @@ function Dashboard() {
 
               {/* Rejection Stats */}
               <div className="metric-card danger">
-                <div className="metric-icon">❌</div>
+                <div className="metric-icon"></div>
                 <div className="metric-content">
                   <div className="metric-value">{stats?.rejected || 0}</div>
                   <div className="metric-label">Rejections</div>
@@ -164,7 +164,7 @@ function Dashboard() {
 
               {/* Today Stats */}
               <div className="metric-card highlight">
-                <div className="metric-icon">📅</div>
+                <div className="metric-icon"></div>
                 <div className="metric-content">
                   <div className="metric-value">{stats?.todayApplications || 0}</div>
                   <div className="metric-label">Applied Today</div>

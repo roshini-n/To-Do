@@ -29,7 +29,14 @@ function Applications() {
     try {
       setLoading(true);
       const response = await applicationsAPI.getAll();
-      setApplications(response.success ? response.data : []);
+      const data = response.success ? response.data : [];
+      // Sort by creation date or application date, most recent first
+      const sorted = data.sort((a, b) => {
+        const dateA = new Date(a.created_at || a.applicationDate);
+        const dateB = new Date(b.created_at || b.applicationDate);
+        return dateB - dateA; // Most recent first
+      });
+      setApplications(sorted);
     } catch (err) {
       setError('Failed to load applications');
       console.error(err);
@@ -119,7 +126,19 @@ function Applications() {
   };
 
   const getStatusClass = (status) => {
-    return `status-${status.toLowerCase().replace(' ', '-')}`;
+    const baseClass = 'app-status status-';
+    switch (status) {
+      case 'Interview':
+        return baseClass + 'interview';
+      case 'Offer':
+        return baseClass + 'offer';
+      case 'Rejected':
+        return baseClass + 'rejected';
+      case 'No Response':
+        return baseClass + 'no-response';
+      default:
+        return baseClass + 'applied';
+    }
   };
 
   if (loading) {
@@ -245,43 +264,43 @@ function Applications() {
       {applications.length > 0 ? (
         <div className="applications-list">
           {applications.map((app) => (
-            <div key={app.id} className="card application-card">
+            <div key={app.id} className="application-card">
               <div className="app-header">
-                <div>
+                <div className="app-title">
                   <h3>{app.company_name}</h3>
-                  <p className="app-role">{app.job_role}</p>
+                  <p>{app.job_role}</p>
                 </div>
-                <span className={`status-badge ${getStatusClass(app.status)}`}>{app.status}</span>
+                <span className={getStatusClass(app.status)}>{app.status}</span>
               </div>
 
               <div className="app-details">
-                <div className="detail-row">
-                  <span className="detail-label">Platform:</span>
-                  <span>{app.platform}</span>
+                <div className="detail-item">
+                  <span className="detail-label">Platform</span>
+                  <span className="detail-value">{app.platform}</span>
                 </div>
-                <div className="detail-row">
-                  <span className="detail-label">Applied:</span>
-                  <span>{new Date(app.applied_date).toLocaleDateString()}</span>
+                <div className="detail-item">
+                  <span className="detail-label">Applied Date</span>
+                  <span className="detail-value">{new Date(app.application_date).toLocaleDateString()}</span>
                 </div>
-                {app.recruiter_name && (
-                  <div className="detail-row">
-                    <span className="detail-label">Recruiter:</span>
-                    <span>{app.recruiter_name}</span>
+                {app.recruiter_email && (
+                  <div className="detail-item">
+                    <span className="detail-label">Recruiter Email</span>
+                    <span className="detail-value">{app.recruiter_email}</span>
                   </div>
                 )}
-                {app.notes && (
-                  <div className="detail-row">
-                    <span className="detail-label">Notes:</span>
-                    <span>{app.notes}</span>
+                {app.recruiter_contact && (
+                  <div className="detail-item">
+                    <span className="detail-label">Recruiter Contact</span>
+                    <span className="detail-value">{app.recruiter_contact}</span>
                   </div>
                 )}
               </div>
 
               <div className="app-actions">
-                <button className="btn btn-primary" onClick={() => handleEdit(app)}>
+                <button className="btn-edit" onClick={() => handleEdit(app)}>
                   Edit
                 </button>
-                <button className="btn btn-danger" onClick={() => handleDelete(app.id)}>
+                <button className="btn-delete" onClick={() => handleDelete(app.id)}>
                   Delete
                 </button>
               </div>
@@ -289,8 +308,9 @@ function Applications() {
           ))}
         </div>
       ) : (
-        <div className="card">
-          <p>No applications yet. Start by adding your first job application!</p>
+        <div className="empty-state">
+          <h3>No applications yet</h3>
+          <p>Start tracking your job search by adding your first application</p>
         </div>
       )}
     </div>
