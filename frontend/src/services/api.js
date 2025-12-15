@@ -43,6 +43,7 @@ export const activitiesAPI = {
   getActivityRange: (startDate, endDate) =>
     activitiesService.getActivityRange(startDate, endDate),
   getStats: (days) => activitiesService.getStats(days),
+  delete: (activityId) => activitiesService.delete(activityId),
 };
 
 // Reminders endpoints

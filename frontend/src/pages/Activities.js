@@ -13,7 +13,6 @@ function Activities() {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [formData, setFormData] = useState({
     activity_type: 'Study',
-    title: '',
     duration_minutes: 0,
     description: '',
     activity_date: new Date().toISOString().split('T')[0],
@@ -47,20 +46,32 @@ function Activities() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await activitiesAPI.log(formData);
+      setError('');
+      console.log('Submitting activity form data:', formData);
+      
+      const result = await activitiesAPI.log(formData);
+      
+      console.log('Submit result:', result);
+      
+      if (!result.success) {
+        setError(result.error || 'Failed to log activity');
+        console.error('Submit error:', result.error);
+        return;
+      }
+      
+      console.log('Submit successful, refreshing activities...');
       await fetchDailyActivities();
       resetForm();
       setShowForm(false);
     } catch (err) {
-      setError('Failed to log activity');
-      console.error(err);
+      setError('Failed to log activity: ' + err.message);
+      console.error('Save error:', err);
     }
   };
 
   const resetForm = () => {
     setFormData({
       activity_type: 'Study',
-      title: '',
       duration_minutes: 0,
       description: '',
       activity_date: new Date().toISOString().split('T')[0],
@@ -77,6 +88,56 @@ function Activities() {
     };
     return colors[type] || '#95a5a6';
   };
+
+  const handleDeleteActivity = async (activityId) => {
+    if (window.confirm('Are you sure you want to delete this activity?')) {
+      try {
+        const result = await activitiesAPI.delete(activityId);
+        if (result.success) {
+          await fetchDailyActivities();
+        } else {
+          setError(result.error || 'Failed to delete activity');
+        }
+      } catch (err) {
+        setError('Failed to delete activity: ' + err.message);
+        console.error('Delete error:', err);
+      }
+    }
+  };
+
+  // Auto-delete activities at 11:59 PM (23:59)
+  useEffect(() => {
+    const checkAndDeleteActivities = async () => {
+      const now = new Date();
+      const hours = now.getHours();
+      const minutes = now.getMinutes();
+      
+      // Check if it's 23:59 (11:59 PM)
+      if (hours === 23 && minutes === 59) {
+        try {
+          setLoading(true);
+          const response = await activitiesAPI.getDailyActivities(selectedDate);
+          if (response.success && response.data.length > 0) {
+            // Delete all activities for today
+            for (const activity of response.data) {
+              await activitiesAPI.delete(activity.id);
+            }
+            console.log('Activities auto-deleted at 11:59 PM');
+            await fetchDailyActivities();
+          }
+        } catch (err) {
+          console.error('Auto-delete error:', err);
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+
+    // Check every minute
+    const interval = setInterval(checkAndDeleteActivities, 60000);
+    
+    return () => clearInterval(interval);
+  }, [selectedDate]);
 
   if (loading) {
     return <div className="container"><div className="loading"><div className="spinner"></div></div></div>;
@@ -119,17 +180,6 @@ function Activities() {
                   <option value="Leisure">Leisure</option>
                   <option value="Other">Other</option>
                 </select>
-              </div>
-              <div className="form-group">
-                <label>Title *</label>
-                <input
-                  type="text"
-                  name="title"
-                  value={formData.title}
-                  onChange={handleInputChange}
-                  placeholder="e.g., React Study Session"
-                  required
-                />
               </div>
             </div>
 
@@ -194,14 +244,22 @@ function Activities() {
               <div className="timeline-marker" style={{ backgroundColor: getActivityColor(activity.activity_type) }}></div>
               <div className="timeline-content">
                 <div className="activity-header">
-                  <strong>{activity.title}</strong>
                   <span className="activity-type">{activity.activity_type}</span>
                 </div>
+                {activity.description && <p className="activity-description">{activity.description}</p>}
                 {activity.duration_minutes > 0 && (
                   <p className="activity-duration">Duration: {Math.floor(activity.duration_minutes / 60)}h {activity.duration_minutes % 60}m</p>
                 )}
-                {activity.description && <p className="activity-description">{activity.description}</p>}
-                <small className="activity-time">{new Date(activity.activity_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</small>
+                <div className="activity-footer">
+                  <small className="activity-time">{new Date(activity.activity_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</small>
+                  <button
+                    className="btn-delete-activity"
+                    onClick={() => handleDeleteActivity(activity.id)}
+                    title="Delete this activity"
+                  >
+                    Delete
+                  </button>
+                </div>
               </div>
             </div>
           ))}

@@ -13,23 +13,27 @@ export const activitiesService = {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
+      console.log('Logging activity:', activity);
+
       const { data, error } = await supabase
         .from('activities')
         .insert([
           {
             user_id: user.id,
-            activity_type: activity.activityType,
-            topic: activity.topic || null,
-            duration_minutes: activity.durationMinutes,
-            date: activity.date || new Date().toISOString().split('T')[0],
+            activity_type: activity.activity_type,
+            description: activity.description || null,
+            duration_minutes: activity.duration_minutes,
+            date: activity.activity_date || new Date().toISOString().split('T')[0],
             created_at: new Date().toISOString(),
           },
         ])
         .select();
 
       if (error) throw error;
+      console.log('Activity logged successfully:', data);
       return { success: true, data: data[0] };
     } catch (error) {
+      console.error('Log activity error:', error);
       return { success: false, error: error.message };
     }
   },
@@ -130,6 +134,27 @@ export const activitiesService = {
       };
 
       return { success: true, data: stats };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  },
+
+  /**
+   * Delete an activity
+   */
+  delete: async (activityId) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
+      const { error } = await supabase
+        .from('activities')
+        .delete()
+        .eq('id', activityId)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+      return { success: true };
     } catch (error) {
       return { success: false, error: error.message };
     }
